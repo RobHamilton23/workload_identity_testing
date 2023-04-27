@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: workload-identity-testing
+  labels:
+    app: workload-identity-testing
+spec:
+  serviceAccountName: default
+  # nodeSelector:
+  #  iam.gke.io/gke-metadata-server-enabled: "true"
+  containers:
+    - name: wit
+      image: quay.io/robhamilton/workload_identity_testing:0.0.6
+      command: ['go', 'run', '/app']
+      ports:
+        - containerPort: 8080
+    - name: workload-identity-official-test
+      image: google/cloud-sdk:slim
+      command: ["sleep","infinity"]
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: workload-identity-testing-service
+spec:
+  selector:
+    app: workload-identity-testing
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: LoadBalancer
