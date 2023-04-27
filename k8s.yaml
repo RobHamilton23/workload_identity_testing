@@ -1,22 +1,37 @@
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    iam.gke.io/gcp-service-account: edrt-policy-docs-update@rhamilton-001.iam.gserviceaccount.com
+  name: workload-identity-testing
+  namespace: sandbox-rhamilton
+
+# This requires adding a policy binding granting the K8S service account access to the GSA that it
+# needs to impersonate
+#
+# gcloud iam service-accounts add-iam-policy-binding \
+#   edrt-policy-docs-update@rhamilton-001.iam.gserviceaccount.com \
+#   --role roles/iam.workloadIdentityUser \
+#   --member "serviceAccount:pantheon-sandbox.svc.id.goog[sandbox-rhamilton/workload-identity-testing]"
+
+---
+
+apiVersion: v1
 kind: Pod
 metadata:
   name: workload-identity-testing
   labels:
     app: workload-identity-testing
 spec:
-  serviceAccountName: default
-  # nodeSelector:
-  #  iam.gke.io/gke-metadata-server-enabled: "true"
+  serviceAccountName: workload-identity-testing
+  nodeSelector:
+   iam.gke.io/gke-metadata-server-enabled: "true"
   containers:
     - name: wit
-      image: quay.io/robhamilton/workload_identity_testing:0.0.6
-      command: ['go', 'run', '/app']
+      image: quay.io/robhamilton/workload_identity_testing:0.0.8
       ports:
         - containerPort: 8080
-    - name: workload-identity-official-test
-      image: google/cloud-sdk:slim
-      command: ["sleep","infinity"]
+
 ---
 
 apiVersion: v1
